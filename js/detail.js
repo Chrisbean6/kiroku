@@ -20,7 +20,7 @@ function bodyHTML(it) {
   if (it.end) facts.push([it.status === 'dropped' ? 'Mollato' : 'Finito', fmtDate(it.end)]);
   if (T.hours && it.hours) facts.push(['Ore', nf1.format(it.hours)]);
   if (it.words) facts.push(['Parole', nf1.format(it.words)]);
-  if (it.rewatch) facts.push([it.type === 'anime' || it.type === 'film' ? 'Rivisto' : it.type === 'album' ? 'Riascoltato' : it.type === 'game' || it.type === 'vn' ? 'Rigiocato' : 'Riletto', `${it.rewatch} ${it.rewatch === 1 ? 'volta' : 'volte'}`]);
+  if (it.rewatch) facts.push([it.type === 'anime' || it.type === 'film' || it.type === 'tv' ? 'Rivisto' : it.type === 'album' ? 'Riascoltato' : it.type === 'game' || it.type === 'vn' ? 'Rigiocato' : 'Riletto', `${it.rewatch} ${it.rewatch === 1 ? 'volta' : 'volte'}`]);
   if (it.year) facts.push(['Uscito nel', it.year]);
   const status = STATUSES.map((s) => `<button data-st="${s}" role="radio" aria-checked="${it.status === s}">${esc(T.st[s] || ST_ONE[s])}</button>`).join('');
   const pct = progPct(it);

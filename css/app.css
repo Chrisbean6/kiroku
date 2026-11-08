@@ -28,6 +28,8 @@
 .t-game   { --c: var(--t-game);   --on: var(--on-t-game); }
 .t-album  { --c: var(--t-album);  --on: var(--on-t-album); }
 .t-webtoon { --c: var(--t-webtoon); --on: var(--on-t-webtoon); }
+.t-gn { --c: var(--t-gn); --on: var(--on-t-gn); }
+.t-tv { --c: var(--t-tv); --on: var(--on-t-tv); }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; background: var(--paper); }
@@ -222,7 +224,7 @@ a { color: inherit; }
 .cover { position: relative; display: block; aspect-ratio: 2 / 3; border-radius: var(--r-sm); overflow: hidden; background: var(--paper-3); box-shadow: var(--shadow); isolation: isolate; }
 .cover.sq { aspect-ratio: 1; }
 .cover > img { width: 100%; height: 100%; object-fit: cover; }
-.t-manga .cover:not(.sq)::before, .t-book .cover:not(.sq)::before, .t-vn .cover:not(.sq)::before, .t-fanfic .cover:not(.sq)::before {
+.t-manga .cover:not(.sq)::before, .t-gn .cover:not(.sq)::before, .t-book .cover:not(.sq)::before, .t-vn .cover:not(.sq)::before, .t-fanfic .cover:not(.sq)::before {
   content: ""; position: absolute; inset: 0 auto 0 0; width: 9%;
   background: linear-gradient(90deg, rgba(0,0,0,.22), rgba(255,255,255,.12) 55%, transparent);
   z-index: 2; pointer-events: none;

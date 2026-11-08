@@ -57,10 +57,12 @@ function fromYourList() {
 
 /* ---------- 3. Claude ---------- */
 
-const TYPE_WORDS = { manga: 'manga', webtoon: 'webtoon', anime: 'anime', vn: 'visual novel', book: 'libro', film: 'film', fanfic: 'fanfiction', game: 'videogioco', album: 'album' };
+const TYPE_WORDS = { manga: 'manga', webtoon: 'webtoon', gn: 'graphic novel', tv: 'serie TV', anime: 'anime', vn: 'visual novel', book: 'libro', film: 'film', fanfic: 'fanfiction', game: 'videogioco', album: 'album' };
 function parseType(w) {
   const x = norm(w);
   if (/visual|vn/.test(x)) return 'vn';
+  if (/graphic ?novel|fumett|comic/.test(x)) return 'gn';
+  if (/serie ?tv|tv ?series|tv ?show|telefilm|miniserie/.test(x)) return 'tv';
   if (/fanfic/.test(x)) return 'fanfic';
   if (/videogio|gioco|game/.test(x)) return 'game';
   if (/album|disco|musica/.test(x)) return 'album';
@@ -76,13 +78,13 @@ export function claudePrompt(mood) {
   const line = (i) => `- ${i.title} (${TYPE_WORDS[i.type]}${i.score ? `, ${String(i.score).replace('.', ',')}/10` : ''}${i.fav ? ', preferito' : ''}${i.tags.length ? `, ${i.tags.slice(0, 3).join('/')}` : ''})`;
   const liked = sortItems(S.items.filter((i) => i.score >= 7.5 || i.fav), 'score');
   const disliked = S.items.filter((i) => i.score > 0 && i.score <= 5).slice(0, 8);
-  const want = S.type === 'all' ? 'titoli di qualsiasi tipo (manga, webtoon, anime, visual novel, libri, film, fanfiction, videogiochi, album)' : TYPES[S.type].plural;
+  const want = S.type === 'all' ? 'titoli di qualsiasi tipo (manga, webtoon, graphic novel, anime, visual novel, libri, film, serie TV, fanfiction, videogiochi, album)' : TYPES[S.type].plural;
   const build = (nLiked, nKnown) => `Ciao Claude! Uso un'app per tenere traccia di quello che leggo, guardo, gioco e ascolto. Mi consigli 8 ${want} nuovi che probabilmente mi piaceranno?\n\n` +
     (liked.length ? `Cose che ho amato:\n${liked.slice(0, nLiked).map(line).join('\n')}\n\n` : '') +
     (disliked.length ? `Cose che non mi sono piaciute:\n${disliked.map(line).join('\n')}\n\n` : '') +
     (mood ? `In questo momento ho voglia di: ${mood}\n\n` : '') +
     (nKnown ? `Li conosco già, non consigliarmeli: ${S.items.slice(0, nKnown).map((i) => i.title).join('; ')}\n\n` : '') +
-    `Rispondi con un titolo per riga, esattamente in questo formato (così li incollo nell'app):\nTitolo | tipo | autore o studio | anno | perché fa per me (una frase)\nDove "tipo" è uno tra: manga, webtoon, anime, visual novel, libro, film, fanfiction, videogioco, album.`;
+    `Rispondi con un titolo per riga, esattamente in questo formato (così li incollo nell'app):\nTitolo | tipo | autore o studio | anno | perché fa per me (una frase)\nDove "tipo" è uno tra: manga, webtoon, graphic novel, anime, visual novel, libro, film, serie TV, fanfiction, videogioco, album.`;
   let nLiked = 30, nKnown = Math.min(S.items.length, 150);
   let p = build(nLiked, nKnown);
   while (encodeURIComponent(p).length > 7000 && (nKnown > 0 || nLiked > 8)) { if (nKnown > 0) nKnown = Math.max(0, nKnown - 25); else nLiked -= 4; p = build(nLiked, nKnown); }

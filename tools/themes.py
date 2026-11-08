@@ -2,8 +2,8 @@
 I colori dei tipi sono stati validati (separazione per daltonismo) con lo script dataviz."""
 import json
 
-LIGHT_TYPES = {"manga":"#c25b87","webtoon":"#7e6f00","anime":"#4384d5","vn":"#17843f","book":"#a865b7","film":"#a25900","fanfic":"#009696","game":"#6f5db9","album":"#c95d57"}
-DARK_TYPES  = {"manga":"#d16995","webtoon":"#8a7a00","anime":"#5192e4","vn":"#288f49","book":"#b672c5","film":"#b16200","fanfic":"#00a5a6","game":"#7967c5","album":"#d96a64"}
+LIGHT_TYPES = {"manga":"#c25b87","webtoon":"#7e6f00","gn":"#96317d","anime":"#4384d5","vn":"#17843f","book":"#a865b7","film":"#a25900","fanfic":"#009696","game":"#6f5db9","album":"#c95d57","tv":"#006794"}
+DARK_TYPES  = {"manga":"#d16995","webtoon":"#8a7a00","gn":"#a7418d","anime":"#5192e4","vn":"#288f49","book":"#b672c5","film":"#b16200","fanfic":"#00a5a6","game":"#7967c5","album":"#d96a64","tv":"#0077aa"}
 
 def lum(h):
     h = h.lstrip('#'); r, g, b = [int(h[i:i+2], 16) / 255 for i in (0, 2, 4)]

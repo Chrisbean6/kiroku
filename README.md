@@ -14,7 +14,7 @@ La libreria personale di Chri: manga, anime, visual novel, libri, film, fanficti
 
 ## Da dove arrivano copertine e dati
 
-AniList (anime, manga, webtoon e consigli), VNDB (visual novel), Open Library (libri), iTunes e MusicBrainz (album), Wikipedia (film, videogiochi e tutto il resto).
+AniList (anime, manga, webtoon e consigli), VNDB (visual novel), Open Library (libri e graphic novel), TVmaze (serie TV), iTunes e MusicBrainz (album), Wikipedia (film, videogiochi, graphic novel e tutto il resto).
 
 ## Mascotte
 

@@ -3,6 +3,8 @@
 //   VNDB      -> visual novel
 //   Open Library + Wikipedia -> libri
 //   iTunes + MusicBrainz     -> album
+//   TVmaze    -> serie TV (episodi, rete, poster)
+//   Open Library + Wikipedia -> graphic novel
 //   Wikipedia -> film, videogiochi (e riserva per tutto il resto)
 // Ogni ricerca restituisce una lista di "candidati" con la stessa forma.
 import { linkLabel } from './util.js';
@@ -185,10 +187,43 @@ async function musicbrainz(q) {
   }));
 }
 
+/* ---------- TVmaze (serie TV) ---------- */
+
+const TV_GENRE_IT = {
+  Drama: 'Drammatico', Comedy: 'Commedia', Action: 'Azione', Crime: 'Crime', Thriller: 'Thriller', 'Science-Fiction': 'Fantascienza',
+  Fantasy: 'Fantasy', Horror: 'Horror', Romance: 'Romantico', Mystery: 'Mistero', Adventure: 'Avventura', Family: 'Famiglia',
+  Supernatural: 'Soprannaturale', War: 'Guerra', Western: 'Western', History: 'Storico', Medical: 'Medico', Legal: 'Legale',
+  Music: 'Musicale', Sports: 'Sportivo', Espionage: 'Spionaggio', Children: 'Per ragazzi', Anime: 'Anime', Food: 'Cucina', Nature: 'Natura', Travel: 'Viaggio',
+};
+async function tvmaze(q) {
+  const j = await getJSON(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(q)}`);
+  return (j || []).slice(0, 8).map(({ show: s }) => {
+    const net = s.network?.name || s.webChannel?.name || '';
+    const links = [{ url: s.url, label: 'TVmaze' }];
+    if (s.externals?.imdb) links.push({ url: `https://www.imdb.com/title/${s.externals.imdb}/`, label: 'IMDb' });
+    return {
+      title: s.name,
+      year: s.premiered ? Number(s.premiered.slice(0, 4)) : null,
+      author: net,
+      genres: (s.genres || []).map((g) => TV_GENRE_IT[g] || g).slice(0, 4),
+      synopsis: firstSentences(s.summary, 3),
+      coverUrl: s.image?.original || s.image?.medium || null,
+      unit: 'ep', links,
+      src: { k: 'tvmaze', id: String(s.id) }, source: 'TVmaze',
+      note: s.status === 'Ended' ? 'conclusa' : s.status === 'Running' ? 'in corso' : '',
+    };
+  });
+}
+// quanti episodi ha la serie (solo quelli regolari, senza speciali)
+export async function tvEpisodeCount(id) {
+  try { const eps = await getJSON(`https://api.tvmaze.com/shows/${encodeURIComponent(id)}/episodes`); return Array.isArray(eps) ? eps.length : null; }
+  catch { return null; }
+}
+
 /* ---------- Wikipedia ---------- */
 
-const WIKI_HINT = { webtoon: 'webtoon', film: 'film', game: 'video game', book: 'novel', album: 'album', manga: 'manga', anime: 'anime', vn: 'visual novel', fanfic: '' };
-const WIKI_OK = { film: /film|movie/i, game: /game/i, book: /novel|book|novella|series of|memoir|poetry|essay/i, album: /album|EP\b/i };
+const WIKI_HINT = { webtoon: 'webtoon', gn: 'graphic novel', tv: 'TV series', film: 'film', game: 'video game', book: 'novel', album: 'album', manga: 'manga', anime: 'anime', vn: 'visual novel', fanfic: '' };
+const WIKI_OK = { gn: /comic|graphic novel|bande dessinée/i, tv: /television|TV series|miniseries|web series|sitcom/i, film: /film|movie/i, game: /game/i, book: /novel|book|novella|series of|memoir|poetry|essay/i, album: /album|EP\b/i };
 
 async function wikipedia(type, q) {
   const hint = WIKI_HINT[type] || '';
@@ -200,7 +235,7 @@ async function wikipedia(type, q) {
     const d = p.description || '';
     const m = /^(\d{4})\b.*?\bby (.+)$/i.exec(d);
     return {
-      title: p.title.replace(/ \((\d{4} )?(film|video game|novel|album|manga|anime|book)\)$/i, ''),
+      title: p.title.replace(/ \((\d{4} )?(American |British |South Korean )?(film|video game|novel|album|manga|anime|book|TV series|miniseries|comics|graphic novel)\)$/i, ''),
       year: m ? Number(m[1]) : (/\b(19|20)\d{2}\b/.exec(d)?.[0] ? Number(/\b(19|20)\d{2}\b/.exec(d)[0]) : null),
       author: m ? m[2].replace(/\s*\(.*\)$/, '') : '',
       synopsis: firstSentences(p.extract, 3),
@@ -242,6 +277,8 @@ export async function searchOnline(type, q) {
     case 'anime': case 'manga': case 'webtoon': return settle([() => anilist(type, q)]);
     case 'vn': return settle([() => vndb(q), () => wikipedia('vn', q).then((r) => r.slice(0, 2))]);
     case 'book': return settle([() => openlibrary(q), () => wikipedia('book', q).then((r) => r.slice(0, 3))]);
+    case 'gn': return settle([() => wikipedia('gn', q).then((r) => r.slice(0, 4)), () => openlibrary(q).then((r) => r.slice(0, 6))]);
+    case 'tv': return settle([() => tvmaze(q), () => wikipedia('tv', q).then((r) => r.slice(0, 2))]);
     case 'album': return settle([() => itunesAlbums(q), () => musicbrainz(q).then((r) => r.slice(0, 4))]);
     case 'film': case 'game': return settle([() => wikipedia(type, q)]);
     case 'fanfic': return [];
@@ -253,7 +290,7 @@ export async function searchOnline(type, q) {
 export async function searchCovers(type, q) {
   const all = await searchOnline(type, q).catch(() => []);
   let extra = [];
-  if (['manga', 'webtoon', 'anime', 'vn', 'book'].includes(type)) extra = await wikipedia(type, q).catch(() => []);
+  if (['manga', 'webtoon', 'anime', 'vn', 'book', 'gn'].includes(type)) extra = await wikipedia(type, q).catch(() => []);
   const seen = new Set();
   return [...all, ...extra].filter((c) => c.coverUrl && !c.nsfwCover && !seen.has(c.coverUrl) && seen.add(c.coverUrl)).slice(0, 18);
 }

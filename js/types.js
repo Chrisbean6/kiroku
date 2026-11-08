@@ -22,6 +22,12 @@ export const TYPES = {
     formats: { series: 'Serie', single: 'Storia breve' },
     st: { ongoing: 'In lettura', done: 'Letto', planned: 'Da leggere' }, cheer: 'Buona lettura!',
   },
+  gn: {
+    label: 'Graphic novel', plural: 'graphic novel', one: 'graphic novel', jp: '', author: 'Autori',
+    units: { vol: 'volumi', num: 'numeri', pag: 'pagine' }, unit: 'vol',
+    formats: { single: 'Volume unico', series: 'Parte di una serie' }, series: true,
+    st: { ongoing: 'In lettura', done: 'Letta', planned: 'Da leggere' }, cheer: 'Buona lettura!',
+  },
   anime: {
     label: 'Anime', plural: 'anime', one: 'anime', jp: 'アニメ', author: 'Studio',
     units: { ep: 'episodi' }, unit: 'ep',
@@ -59,6 +65,12 @@ export const TYPES = {
     label: 'Album', plural: 'album', one: 'album', jp: '音楽', author: 'Artista', square: true,
     units: null,
     st: { ongoing: 'In ascolto', done: 'Ascoltato', planned: 'Da ascoltare' }, cheer: 'Buon ascolto!',
+  },
+  tv: {
+    label: 'Serie TV', plural: 'serie TV', one: 'serie TV', jp: '', author: 'Rete o piattaforma',
+    units: { ep: 'episodi', stag: 'stagioni' }, unit: 'ep',
+    formats: { series: 'Serie', mini: 'Miniserie' },
+    st: { ongoing: 'In visione', done: 'Vista', planned: 'Da vedere' }, cheer: 'Buona visione!',
   },
 };
 export const TYPE_KEYS = Object.keys(TYPES);

@@ -4,7 +4,7 @@ import { TYPES, TYPE_KEYS, STATUSES, ST_ONE, COMMON_GENRES, PLATFORMS, normItem 
 import { S, bus, byId, inType } from './state.js';
 import { Store, coverURL } from './store.js';
 import * as cloud from './cloud.js';
-import { searchOnline, searchCovers, wikiItalian } from './sources.js';
+import { searchOnline, searchCovers, wikiItalian, tvEpisodeCount } from './sources.js';
 import { openSheet, mountRate, processImage } from './sheets.js';
 import { genHTML } from './cards.js';
 import { toast, confetti } from './effects.js';
@@ -257,6 +257,7 @@ export function openForm(orig, preset = {}) {
       if (force || !E[name].value) { E[name].value = val; filled.push(label); }
     };
     if (c.title && norm(c.title) !== norm(E.title.value)) { E.title.value = c.title; filled.push('titolo'); }
+    else if (c.title && c.title !== E.title.value) E.title.value = c.title;   // stesso titolo, scritto giusto (maiuscole, accenti)
     setIf('altTitle', c.altTitle, 'titolo originale');
     setIf('author', c.author, TYPES[f.type].author.toLowerCase());
     setIf('year', c.year, 'anno');
@@ -280,6 +281,12 @@ export function openForm(orig, preset = {}) {
     st.classList.remove('err');
     st.textContent = filled.length ? `Ho preso da ${c.source}: ${[...new Set(filled)].join(', ')}. Controlla che sia giusto.` : 'Era già tutto compilato.';
     if (c.nsfwCover) st.textContent += ' La copertina è esplicita: non l\'ho messa.';
+    // serie TV: quanti episodi ha
+    if (c.src?.k === 'tvmaze') tvEpisodeCount(c.src.id).then((n) => {
+      if (!n || !document.contains(el) || !E.total || E.total.value) return;
+      E.total.value = n; if (E.unit) E.unit.value = 'ep';
+      st.textContent = st.textContent.replace('. Controlla', `, ${n} episodi. Controlla`);
+    });
     // trama in italiano da Wikipedia, se c'è
     if (c.source === 'Wikipedia' && c.src?.id) wikiItalian(c.src.id).then((r) => {
       if (!r || !document.contains(el)) return;
