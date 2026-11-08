@@ -119,7 +119,7 @@ async function vndb(q) {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       filters: ['search', '=', q],
-      fields: 'id, title, alttitle, released, image.url, image.sexual, image.violence, developers.name, length_minutes, tags.name, tags.rating, tags.spoiler, description, extlinks.url, extlinks.label',
+      fields: 'id, title, alttitle, released, image.url, image.sexual, image.violence, developers.name, length_minutes, tags.name, tags.rating, tags.spoiler, tags.category, description, extlinks.url, extlinks.label',
       sort: 'searchrank', results: 8,
     }),
   });
@@ -131,7 +131,7 @@ async function vndb(q) {
       title: v.title, altTitle: v.alttitle || '',
       author: (v.developers || []).map((d) => d.name).slice(0, 2).join(', '),
       year: v.released ? Number(String(v.released).slice(0, 4)) || null : null,
-      genres: [], tags: (v.tags || []).filter((t) => t.spoiler === 0 && t.rating >= 2).sort((a, b) => b.rating - a.rating).slice(0, 6).map((t) => tagIt(t.name)),
+      genres: [], tags: (v.tags || []).filter((t) => t.spoiler === 0 && t.rating >= 2 && t.category === 'cont').sort((a, b) => b.rating - a.rating).slice(0, 6).map((t) => tagIt(t.name)),
       hours: v.length_minutes ? Math.round(v.length_minutes / 60) : null,
       synopsis: firstSentences(v.description, 4),
       coverUrl: v.image?.url || null, nsfwCover: !!nsfw,
