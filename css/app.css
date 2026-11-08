@@ -725,3 +725,4 @@ details.more[open] summary { margin-bottom: 8px; }
 /* fogli sopra al visualizzatore di immagini */
 .lightbox ~ .scrim { z-index: 85; }
 .lightbox ~ .sheet { z-index: 86; }
+@media (min-width: 700px) { .sumi-peek { right: calc(max(4px, 50% - 560px) + 120px); bottom: -18px; } }
