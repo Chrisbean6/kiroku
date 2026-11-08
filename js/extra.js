@@ -8,7 +8,7 @@ import { searchOnline } from './sources.js';
 import { openSheet } from './sheets.js';
 import { cardHTML } from './cards.js';
 import { toast, confetti } from './effects.js';
-import { sumi, kuro, sumiRaw } from './mascot.js';
+import { kuroBox, kuro } from './mascot.js';
 import { reduced } from './util.js';
 
 const closeBtn = '<button class="icon-btn" data-x aria-label="Chiudi"><svg class="ic"><use href="#i-close"/></svg></button>';
@@ -149,16 +149,23 @@ export function openPicker() {
 /* ---------- temi ---------- */
 
 export const THEMES = [
-  ['inchiostro', 'Inchiostro', '#140B0C', '#8E0A0A', '#C8141F', '#F3E7E4', '"Yuji Syuku"'],
-  ['cipria', 'Bordeaux e cipria', '#F7EEF0', '#7B1E33', '#E6A7B4', '#33101A', '"Shippori Mincho B1"'],
-  ['ardesia', 'Bordeaux e ardesia', '#E8EBF0', '#7A1F35', '#7F93AF', '#241318', '"Shippori Mincho B1"'],
-  ['salvia', 'Bordeaux e salvia', '#EDF0E8', '#74182B', '#8DA47E', '#2A1418', '"Zen Old Mincho"'],
-  ['notte', 'Bordeaux notte', '#1A0D12', '#7A2238', '#D4677F', '#F4E6EA', '"Shippori Mincho B1"'],
-  ['riso', 'Risograph', '#EEECF4', '#3B5BDB', '#F0428F', '#1D1A33', '"Dela Gothic One"'],
-  ['riso-dark', 'Risograph notte', '#17142A', '#5B7BF0', '#F0428F', '#EEECF4', '"Dela Gothic One"'],
+  // [id, nome, sfondo, colore 1, colore 2, testo, font, scuro?]
+  ['notte', 'Bordeaux notte', '#1A0D12', '#D4677F', '#7A2238', '#F4E6EA', '"Shippori Mincho B1"', 1],
+  ['riso-dark', 'Risograph notte', '#17142A', '#5B7BF0', '#F0428F', '#EEECF4', '"Dela Gothic One"', 1],
+  ['inchiostro', 'Inchiostro', '#140B0C', '#8E0A0A', '#E0303A', '#F3E7E4', '"Yuji Syuku"', 1],
+  ['grafite', 'Grafite', '#111113', '#E5484D', '#3A3A42', '#EDEDF0', '"Bricolage Grotesque"', 1],
+  ['ardesia-notte', 'Bordeaux e ardesia notte', '#171A21', '#D96079', '#7F93AF', '#ECE7EA', '"Fraunces"', 1],
+  ['lanterna', 'Lanterna', '#13100C', '#E9A23B', '#5E9C95', '#F3E9DB', '"Fraunces"', 1],
+  ['velluto', 'Velluto', '#140F19', '#C391EE', '#E07A9B', '#EFE7F4', '"Fraunces"', 1],
+  ['oled', 'Nero assoluto', '#000000', '#FF4D5E', '#7A0B14', '#F2F2F2', '"Bricolage Grotesque"', 1],
+  ['cipria', 'Bordeaux e cipria', '#F7EEF0', '#7B1E33', '#E6A7B4', '#33101A', '"Shippori Mincho B1"', 0],
+  ['ardesia', 'Bordeaux e ardesia', '#E8EBF0', '#7A1F35', '#7F93AF', '#241318', '"Shippori Mincho B1"', 0],
+  ['salvia', 'Bordeaux e salvia', '#EDF0E8', '#74182B', '#8DA47E', '#2A1418', '"Zen Old Mincho"', 0],
+  ['riso', 'Risograph', '#EEECF4', '#3B5BDB', '#F0428F', '#1D1A33', '"Dela Gothic One"', 0],
 ];
 
 export function applyTheme(name) {
+  if (!THEMES.some((x) => x[0] === name)) name = 'notte';   // temi tolti nelle versioni precedenti
   document.documentElement.dataset.theme = name;
   const t = THEMES.find((x) => x[0] === name);
   const meta = document.querySelector('meta[name="theme-color"]');
@@ -191,7 +198,7 @@ async function readMAL(file) {
   for (const m of doc.getElementsByTagName('manga')) {
     const title = g(m, 'manga_title'); if (!title) continue;
     const ch = n(g(m, 'manga_chapters')), rch = n(g(m, 'my_read_chapters')), vol = n(g(m, 'manga_volumes')), rvol = n(g(m, 'my_read_volumes'));
-    const useVol = !ch && !rch && (vol || rvol);
+    const useVol = !!(vol || rvol) || (!ch && !rch);   // i volumi hanno la precedenza
     out.push(normItem({ type: 'manga', title, unit: useVol ? 'vol' : 'cap', total: useVol ? vol : ch, progress: useVol ? rvol : rch, score: n(g(m, 'my_score')) || 0, status: MAL_ST[g(m, 'my_status').toLowerCase()] || 'done', start: d(g(m, 'my_start_date')), end: d(g(m, 'my_finish_date')), rewatch: n(g(m, 'my_times_read')) || 0, notes: g(m, 'my_comments'), links: [{ url: `https://myanimelist.net/manga/${g(m, 'manga_mangadb_id')}` }], createdAt: base - out.length }));
   }
   return out;
@@ -209,10 +216,10 @@ export function openSettings() {
     label: 'Impostazioni',
     html: `
     <div class="sheet-head"><h2>Impostazioni</h2>${closeBtn}</div>
-    <div class="set-group"><h3>Tema</h3><p>Prova le bozze: cambiano al volo.</p>
-      <div class="themes" role="radiogroup" aria-label="Tema">${THEMES.map(([k, l, p, a, a2, ink, font]) => `<button class="theme-card" role="radio" aria-checked="${prefs.theme === k}" data-th="${k}" style="--tp:${p};--ti:${ink};--tf:${font}">
+    <div class="set-group"><h3>Tema</h3><p>Cambia al volo.</p>
+      ${[['Scuri', 1], ['Chiari', 0]].map(([g, d]) => `<h4 class="th-group">${g}</h4><div class="themes" role="radiogroup" aria-label="Temi ${g.toLowerCase()}">${THEMES.filter((t) => t[7] === d).map(([k, l, p, a, a2, ink, font]) => `<button class="theme-card" role="radio" aria-checked="${prefs.theme === k}" data-th="${k}" style="--tp:${p};--ti:${ink};--tf:${font}">
         <span class="sw"><i style="background:${a}"></i><i style="background:${a2}"></i><i style="background:${p}"></i></span>
-        <span class="ttxt">記録</span><b>${esc(l)}</b></button>`).join('')}</div></div>
+        <span class="ttxt">Kiroku</span><b>${esc(l)}</b></button>`).join('')}</div>`).join('')}</div>
     <div class="set-group"><h3>Account e sincronizzazione</h3>
       ${user ? `<p>Collegato come <b>${esc(user.email)}</b>. I titoli si sincronizzano tra telefono e PC.<span class="usage"></span></p>
         <div class="set-btns"><button class="btn small ghost" data-act="sync"><svg class="ic"><use href="#i-cloud"/></svg>Sincronizza ora</button><button class="btn small ghost" data-act="logout">Esci</button></div>`
@@ -235,7 +242,7 @@ export function openSettings() {
       <p>Scarica l'export della tua lista anime o manga dalla pagina <a href="https://myanimelist.net/panel.php?go=export" target="_blank" rel="noopener">Export</a> di MyAnimeList e caricalo qui (.xml o .xml.gz).</p>
       <div class="set-btns"><label class="btn small ghost"><svg class="ic"><use href="#i-upload"/></svg>Scegli il file<input type="file" accept=".xml,.gz,application/xml,text/xml,application/gzip" class="sr-only" name="mal"></label></div>
       <div class="progress-line" data-slot="mal" role="status"></div></div>
-    <div class="set-group" style="text-align:center;color:var(--ink-3);font-size:13px"><div class="mascot" style="width:90px">${sumiRaw('read')}</div>Kiroku 記録, versione 2. Sumi ti saluta.</div>`,
+    <div class="set-group" style="text-align:center;color:var(--ink-3);font-size:13px"><div class="mascot" style="width:84px">${kuro()}</div>Kiroku, versione 3. Kuro ti saluta.</div>`,
   });
   const el = api.el;
   if (user) cloud.storageUsage().then((b) => { const u = $('.usage', el); if (u && b) u.textContent = ` Spazio usato per immagini e file: ${fmtSize(b)} su 1 GB.`; }).catch(() => {});
@@ -316,7 +323,7 @@ export function renderGate(onDone) {
   gate.hidden = false;
   let mode = LS.get('kiroku2.hadAccount', false) ? 'in' : 'up';
   const paint = (msg = '') => {
-    gate.innerHTML = `<div class="gate">${sumi('read', 'bob')}<h1>Kiroku</h1>
+    gate.innerHTML = `<div class="gate">${kuroBox('books')}<h1>Kiroku</h1>
       <p>${mode === 'in' ? 'Bentornato. Accedi per ritrovare il tuo scaffale su questo dispositivo.' : 'Crea il tuo account: così telefono e PC restano sincronizzati.'}</p>
       <form novalidate>
         <label class="fld"><span>Email</span><input name="email" type="email" autocomplete="email" inputmode="email" required></label>

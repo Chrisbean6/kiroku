@@ -1,4 +1,4 @@
-# Kiroku 記録
+# Kiroku
 
 La libreria personale di Chri: manga, anime, visual novel, libri, film, fanfiction, videogiochi e album.
 
@@ -14,8 +14,8 @@ La libreria personale di Chri: manga, anime, visual novel, libri, film, fanficti
 
 ## Da dove arrivano copertine e dati
 
-AniList (anime, manga e consigli), VNDB (visual novel), Open Library (libri), iTunes e MusicBrainz (album), Wikipedia (film, videogiochi e tutto il resto).
+AniList (anime, manga, webtoon e consigli), VNDB (visual novel), Open Library (libri), iTunes e MusicBrainz (album), Wikipedia (film, videogiochi e tutto il resto).
 
 ## Mascotte
 
-Sumi, il lupo a china (`tools/mascot.py` lo disegna con tratti casuali), Kuro il gatto nero e un fantasmino con la candela.
+Kuro, il gatto nero: sta sulla pila di libri in testata, si affaccia sopra la barra in basso e dorme sugli scaffali vuoti. `tools/kuro_poses.py` e `tools/emblem.py` lo disegnano, `tools/export_art.py` lo mette in `js/art.js`, `tools/icons_kuro.py` fa le icone. C'è anche un fantasmino con la candela.

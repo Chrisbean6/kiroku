@@ -49,7 +49,7 @@ async function getJSON(url, opts = {}, ms = 9000) {
 
 /* ---------- AniList ---------- */
 
-const AL_FIELDS = `id type format title { romaji english native } startDate { year } episodes chapters volumes genres
+const AL_FIELDS = `id type format countryOfOrigin title { romaji english native } startDate { year } episodes chapters volumes genres
   tags { name rank isMediaSpoiler } coverImage { extraLarge large } description(asHtml: false) siteUrl isAdult
   studios(isMain: true) { nodes { name } } staff(perPage: 4, sort: [RELEVANCE]) { edges { role node { name { full } } } }`;
 
@@ -67,9 +67,9 @@ function alToCand(m, type) {
     author, year: m.startDate?.year || null,
     genres: (m.genres || []).map((g) => GENRE_IT[g] || g).filter((g) => g !== 'Hentai').slice(0, 5),
     tags: (m.tags || []).filter((t) => !t.isMediaSpoiler && t.rank >= 70).slice(0, 6).map((t) => tagIt(t.name)).filter(Boolean),
-    total: type === 'anime' ? m.episodes : (m.chapters || null),
-    unit: type === 'manga' && !m.chapters && m.volumes ? 'vol' : undefined,
-    totalVol: m.volumes || null,
+    // nei manga contano i volumi; nei webtoon i capitoli
+    total: type === 'anime' ? m.episodes : type === 'manga' ? (m.volumes || m.chapters || null) : (m.chapters || null),
+    unit: type === 'manga' ? (m.volumes || !m.chapters ? 'vol' : 'cap') : undefined,
     format,
     synopsis: firstSentences(m.description, 4),
     coverUrl: m.coverImage?.extraLarge || m.coverImage?.large || null,
@@ -86,7 +86,12 @@ async function anilist(type, q) {
     method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ query, variables: { q, t: type === 'anime' ? 'ANIME' : 'MANGA' } }),
   });
-  return (j.data?.Page?.media || []).map((m) => alToCand(m, type));
+  let media = j.data?.Page?.media || [];
+  // per i webtoon metto prima i fumetti coreani/cinesi (manhwa, manhua), per i manga quelli giapponesi
+  const asian = (m) => ['KR', 'CN', 'TW'].includes(m.countryOfOrigin);
+  if (type === 'webtoon') media = [...media.filter(asian), ...media.filter((m) => !asian(m))];
+  if (type === 'manga') media = [...media.filter((m) => !asian(m)), ...media.filter(asian)];
+  return media.map((m) => alToCand(m, type));
 }
 
 // consigli della community AniList partendo dai tuoi titoli preferiti
@@ -101,7 +106,7 @@ export async function anilistRecs(seeds) {
   seeds.forEach((s, i) => {
     for (const n of j.data?.[`a${i}`]?.recommendations?.nodes || []) {
       const m = n.mediaRecommendation; if (!m || m.isAdult) continue;
-      const type = m.type === 'ANIME' ? 'anime' : 'manga';
+      const type = m.type === 'ANIME' ? 'anime' : ['KR', 'CN', 'TW'].includes(m.countryOfOrigin) ? 'webtoon' : 'manga';
       const key = String(m.id);
       const w = Math.max(0.5, (s.score || 7) - 6) * Math.log1p(Math.max(0, n.rating || 0));
       const prev = out.get(key);
@@ -182,7 +187,7 @@ async function musicbrainz(q) {
 
 /* ---------- Wikipedia ---------- */
 
-const WIKI_HINT = { film: 'film', game: 'video game', book: 'novel', album: 'album', manga: 'manga', anime: 'anime', vn: 'visual novel', fanfic: '' };
+const WIKI_HINT = { webtoon: 'webtoon', film: 'film', game: 'video game', book: 'novel', album: 'album', manga: 'manga', anime: 'anime', vn: 'visual novel', fanfic: '' };
 const WIKI_OK = { film: /film|movie/i, game: /game/i, book: /novel|book|novella|series of|memoir|poetry|essay/i, album: /album|EP\b/i };
 
 async function wikipedia(type, q) {
@@ -234,7 +239,7 @@ export async function searchOnline(type, q) {
   q = String(q || '').trim();
   if (!q) return [];
   switch (type) {
-    case 'anime': case 'manga': return settle([() => anilist(type, q)]);
+    case 'anime': case 'manga': case 'webtoon': return settle([() => anilist(type, q)]);
     case 'vn': return settle([() => vndb(q), () => wikipedia('vn', q).then((r) => r.slice(0, 2))]);
     case 'book': return settle([() => openlibrary(q), () => wikipedia('book', q).then((r) => r.slice(0, 3))]);
     case 'album': return settle([() => itunesAlbums(q), () => musicbrainz(q).then((r) => r.slice(0, 4))]);
@@ -248,7 +253,7 @@ export async function searchOnline(type, q) {
 export async function searchCovers(type, q) {
   const all = await searchOnline(type, q).catch(() => []);
   let extra = [];
-  if (['manga', 'anime', 'vn', 'book'].includes(type)) extra = await wikipedia(type, q).catch(() => []);
+  if (['manga', 'webtoon', 'anime', 'vn', 'book'].includes(type)) extra = await wikipedia(type, q).catch(() => []);
   const seen = new Set();
   return [...all, ...extra].filter((c) => c.coverUrl && !c.nsfwCover && !seen.has(c.coverUrl) && seen.add(c.coverUrl)).slice(0, 18);
 }

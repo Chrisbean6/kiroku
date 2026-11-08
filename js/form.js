@@ -223,7 +223,7 @@ export function openForm(orig, preset = {}) {
     if (src) coverBox.insertAdjacentHTML('afterbegin', `<img src="${esc(src)}" alt="" referrerpolicy="no-referrer">`);
     $('.ph', coverBox).hidden = !!src;
     $('[data-act="rmcover"]', el).hidden = !src;
-    if (src && !reduced()) $('img', coverBox).animate([{ transform: 'scale(.85) rotate(-3deg)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 380, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+    if (src && !reduced()) $('img', coverBox).animate([{ transform: 'scale(.94)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 380, easing: 'cubic-bezier(.22, 1, .36, 1)' });
   }
   async function useFile(file) {
     const err = $('.form-err', el);

@@ -1,10 +1,10 @@
 // Le viste principali: scaffale, tier list, statistiche.
 import { $, $$, esc, norm, nf0, nf1, collator, reduced } from './util.js';
-import { TYPES, TYPE_KEYS, STATUSES, ST_GENERIC, typeName } from './types.js';
+import { TYPES, TYPE_KEYS, STATUSES, ST_GENERIC, typeName, typeIcon } from './types.js';
 import { S, prefs, inType } from './state.js';
 import { Store } from './store.js';
 import { cardHTML, rowHTML } from './cards.js';
-import { sumi, ghost } from './mascot.js';
+import { kuroBox, ghost } from './mascot.js';
 
 /* ---------- filtri e ordinamento ---------- */
 
@@ -54,20 +54,30 @@ export function renderSummary() {
     (avg != null ? `<span><b>${nf1.format(avg)}</b>voto medio</span>` : '');
 }
 
+let tabInd = null;   // posizione precedente dell'indicatore, per farlo scivolare
 export function renderTabs() {
   const box = $('#typetabs');
   const counts = { all: S.items.length };
   for (const k of TYPE_KEYS) counts[k] = S.items.filter((i) => i.type === k).length;
   // le categorie vuote vanno in fondo, così le tue restano a portata di pollice
   const keys = ['all', ...TYPE_KEYS.filter((k) => counts[k]), ...TYPE_KEYS.filter((k) => !counts[k])];
-  box.innerHTML = keys.map((k) => {
+  box.innerHTML = `<span class="tab-ind" aria-hidden="true"></span>` + keys.map((k) => {
     const T = TYPES[k];
     return `<button data-t="${k}" class="${k === 'all' ? '' : 't-' + k}" aria-pressed="${S.type === k}">` +
-      (T ? `<span class="jp" aria-hidden="true">${T.jp}</span>` : '') + `${k === 'all' ? 'Tutti' : esc(T.short || T.label)}` +
+      typeIcon(k, 'ic ti') + `${k === 'all' ? 'Tutti' : esc(T.short || T.label)}` +
       `${counts[k] ? `<small>${counts[k]}</small>` : ''}</button>`;
   }).join('');
   const on = box.querySelector('[aria-pressed="true"]');
-  if (on && on.offsetLeft + on.offsetWidth > box.scrollLeft + box.clientWidth) on.scrollIntoView({ inline: 'center', block: 'nearest' });
+  const ind = box.querySelector('.tab-ind');
+  if (on) {
+    const pos = { x: on.offsetLeft, w: on.offsetWidth, c: S.type === 'all' ? 'var(--accent)' : `var(--t-${S.type})` };
+    const put = (p) => { ind.style.transform = `translateX(${p.x}px)`; ind.style.width = p.w + 'px'; ind.style.background = p.c; };
+    if (tabInd && !reduced() && (tabInd.x !== pos.x || tabInd.w !== pos.w)) {
+      ind.style.transition = 'none'; put(tabInd); void ind.offsetWidth; ind.style.transition = ''; put(pos);
+    } else put(pos);
+    tabInd = pos;
+    if (on.offsetLeft + on.offsetWidth > box.scrollLeft + box.clientWidth) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
+  }
 }
 
 export function renderChips() {
@@ -97,8 +107,8 @@ export function renderShelf() {
     return;
   }
   if (!S.items.length) {
-    box.innerHTML = `<div class="empty">${sumi('read', 'bob')}<h2>Lo scaffale è vuoto</h2>` +
-      `<p>Sumi ha già il libro in mano. Aggiungi la prima cosa che ti è rimasta in testa: manga, film, album, quello che vuoi.</p>` +
+    box.innerHTML = `<div class="empty">${kuroBox('sleep')}<h2>Lo scaffale è vuoto</h2>` +
+      `<p>Kuro ci si è addormentato sopra. Aggiungi la prima cosa che ti è rimasta in testa: manga, film, album, quello che vuoi.</p>` +
       `<div class="btns"><button class="btn accent" data-act="add">Aggiungi il primo titolo</button>` +
       `<button class="btn ghost" data-act="bulk">Aggiungine tanti insieme</button>` +
       `<button class="link-btn" data-act="settings">Importa da MyAnimeList o da un backup</button></div></div>`;
@@ -114,6 +124,7 @@ export function renderShelf() {
   const drop = S.firstDrop && !reduced();
   if (prefs.view === 'list') box.innerHTML = `<div class="list">${list.map(rowHTML).join('')}</div>`;
   else box.innerHTML = `<div class="grid">${list.map((it, i) => cardHTML(it, i, { drop, tags: S.status === 'all' })).join('')}</div>`;
+  $$('.cover > img', box).forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add('ok'); });
   S.firstDrop = false;
   if (S.flashId) {
     const el = box.querySelector(`[data-id="${CSS.escape(S.flashId)}"]`);
@@ -138,7 +149,7 @@ export function renderTier() {
   const its = S.items.filter(inType);
   const rated = sortItems(its.filter((i) => i.score > 0), 'score');
   if (!rated.length) {
-    box.innerHTML = `<div class="empty">${sumi('think')}<h2>Ancora nessun voto</h2><p>Dai un voto ai tuoi titoli e la tier list si compone da sola.</p></div>`;
+    box.innerHTML = `<div class="empty">${kuroBox('sit')}<h2>Ancora nessun voto</h2><p>Dai un voto ai tuoi titoli e la tier list si compone da sola.</p></div>`;
     return;
   }
   const unrated = its.length - rated.length;
@@ -199,7 +210,7 @@ export function renderStats() {
   box.className = S.type === 'all' ? '' : 't-' + S.type;
   const bc = S.type === 'all' ? 'var(--chart)' : 'var(--c)';
   if (!its.length) {
-    box.innerHTML = `<div class="empty">${sumi('think')}<h2>Niente da contare</h2><p>Aggiungi qualche titolo e qui compaiono i tuoi numeri.</p></div>`;
+    box.innerHTML = `<div class="empty">${kuroBox('sit')}<h2>Niente da contare</h2><p>Aggiungi qualche titolo e qui compaiono i tuoi numeri.</p></div>`;
     return;
   }
   const rated = its.filter((i) => i.score > 0);
@@ -225,7 +236,8 @@ export function renderStats() {
   const of = (t) => its.filter((i) => i.type === t);
   const time = [];
   if (of('anime').length) { const ep = of('anime').reduce((a, i) => a + watched(i), 0); const h = (ep * 24) / 60; time.push(`<div class="tile"><div class="v">${nf0.format(ep)}</div><div class="k">episodi visti</div><div class="s">circa ${h >= 48 ? nf1.format(h / 24) + ' giorni' : nf0.format(h) + ' ore'} di anime</div></div>`); }
-  if (of('manga').length) { const ch = of('manga').filter((i) => i.unit !== 'vol').reduce((a, i) => a + watched(i), 0); const vol = of('manga').filter((i) => i.unit === 'vol').reduce((a, i) => a + watched(i), 0); time.push(`<div class="tile"><div class="v">${nf0.format(ch)}</div><div class="k">capitoli di manga</div>${vol ? `<div class="s">e ${nf0.format(vol)} volumi</div>` : ''}</div>`); }
+  if (of('manga').length) { const vol = of('manga').filter((i) => i.unit === 'vol').reduce((a, i) => a + watched(i), 0); const ch = of('manga').filter((i) => i.unit === 'cap').reduce((a, i) => a + watched(i), 0); time.push(`<div class="tile"><div class="v">${nf0.format(vol)}</div><div class="k">volumi di manga</div>${ch ? `<div class="s">e ${nf0.format(ch)} capitoli</div>` : ''}</div>`); }
+  if (of('webtoon').length) { const ch = of('webtoon').reduce((a, i) => a + watched(i), 0); time.push(`<div class="tile"><div class="v">${nf0.format(ch)}</div><div class="k">capitoli di webtoon</div></div>`); }
   if (of('book').length) { const pg = of('book').filter((i) => i.unit === 'pag').reduce((a, i) => a + watched(i), 0); time.push(`<div class="tile"><div class="v">${nf0.format(pg)}</div><div class="k">pagine lette</div><div class="s">${of('book').filter((i) => i.status === 'done').length} libri finiti</div></div>`); }
   if (of('fanfic').length) { const w = of('fanfic').reduce((a, i) => a + (i.status === 'done' ? i.words || 0 : 0), 0); time.push(`<div class="tile"><div class="v">${of('fanfic').filter((i) => i.status === 'done').length}</div><div class="k">fanfiction lette</div>${w ? `<div class="s">${nf0.format(w)} parole</div>` : ''}</div>`); }
   if (of('vn').length) { const h = of('vn').reduce((a, i) => a + (i.hours || 0), 0); time.push(`<div class="tile"><div class="v">${nf0.format(h)}</div><div class="k">ore di visual novel</div></div>`); }

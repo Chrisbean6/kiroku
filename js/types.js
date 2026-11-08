@@ -12,8 +12,14 @@ import { newId, safeUrl, linkLabel } from './util.js';
 export const TYPES = {
   manga: {
     label: 'Manga', plural: 'manga', one: 'manga', jp: '漫画', author: 'Autore',
-    units: { cap: 'capitoli', vol: 'volumi' }, unit: 'cap',
+    units: { vol: 'volumi', cap: 'capitoli' }, unit: 'vol',
     formats: { series: 'Serie', single: 'Volume unico' },
+    st: { ongoing: 'In lettura', done: 'Letto', planned: 'Da leggere' }, cheer: 'Buona lettura!',
+  },
+  webtoon: {
+    label: 'Webtoon', plural: 'webtoon', one: 'webtoon', jp: '', author: 'Autore',
+    units: { cap: 'capitoli' }, unit: 'cap',
+    formats: { series: 'Serie', single: 'Storia breve' },
     st: { ongoing: 'In lettura', done: 'Letto', planned: 'Da leggere' }, cheer: 'Buona lettura!',
   },
   anime: {
@@ -56,6 +62,8 @@ export const TYPES = {
   },
 };
 export const TYPE_KEYS = Object.keys(TYPES);
+// icona disegnata di ogni categoria (simboli c-* in index.html)
+export const typeIcon = (t, cls = 'ic') => `<svg class="${cls}" aria-hidden="true"><use href="#c-${TYPES[t] ? t : 'all'}"/></svg>`;
 
 export const STATUSES = ['ongoing', 'done', 'planned', 'paused', 'dropped'];
 export const ST_GENERIC = { ongoing: 'In corso', done: 'Completati', planned: 'Da iniziare', paused: 'In pausa', dropped: 'Droppati' };

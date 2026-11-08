@@ -10,7 +10,7 @@ import { openDetail, refreshDetail } from './detail.js';
 import { openForm } from './form.js';
 import { openBulk, openPicker, openSettings, renderGate, applyTheme } from './extra.js';
 import { toast, confetti, tip } from './effects.js';
-import { sumiRaw, kuro } from './mascot.js';
+import { kuroPose, kuro } from './mascot.js';
 import { genHTML } from './cards.js';
 
 const VIEWS = ['scaffale', 'tier', 'stats', 'consigli'];
@@ -66,9 +66,17 @@ Object.assign(bus, {
 
 function route() {
   const v = location.hash.slice(1);
+  const prev = S.view;
   S.view = VIEWS.includes(v) ? v : 'scaffale';
-  $$('[data-view]').forEach((s) => { s.hidden = s.dataset.view !== S.view; });
-  $$('.nav a').forEach((a) => { if (a.dataset.v === S.view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  $$('[data-view]').forEach((s) => {
+    s.hidden = s.dataset.view !== S.view;
+    if (!s.hidden && prev && prev !== S.view && !reduced()) { s.classList.remove('enter'); void s.offsetWidth; s.classList.add('enter'); }
+  });
+  $$('.nav a').forEach((a, i) => {
+    if (a.dataset.v === S.view) { a.setAttribute('aria-current', 'page'); $('.nav').style.setProperty('--nav-i', i); }
+    else a.removeAttribute('aria-current');
+  });
+  if (prev && prev !== S.view) scrollTo({ top: 0, behavior: 'instant' });
   tip.hide();
   render();
 }
@@ -92,28 +100,24 @@ function toggleDial() {
 document.addEventListener('kiroku:sheet', closeDial);
 addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDial(); });
 
-/* ---------- le chicche: Sumi e Kuro ---------- */
+/* ---------- le chicche: Kuro ---------- */
 
 function mountMascots() {
-  const peek = $('#sumiPeek');
-  peek.innerHTML = sumiRaw('read');
-  let taps = [], howling = false;
-  peek.addEventListener('click', () => {
-    if (howling) return;
+  // Kuro sulla pila di libri, in testata
+  const em = $('#emblem');
+  em.innerHTML = kuroPose('books');
+  const top = ['Kuro custodisce la tua libreria.', 'Kuro ha scelto il libro più comodo.', 'Prrr…', 'Kuro non si sposta: ci dorme sopra.', 'Mrrrp?', 'Kuro approva i tuoi voti alti.'];
+  let taps = [];
+  em.addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter((t) => now - t < 2500); taps.push(now);
-    if (!reduced()) peek.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-10px) rotate(-3deg)' }, { transform: 'translateY(0)' }], { duration: 380, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+    if (!reduced()) $('.k-head', em)?.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-5px)' }, { transform: 'translateY(0)' }], { duration: 520, easing: 'cubic-bezier(.22, 1, .36, 1)' });
     if (taps.length >= 5) {
-      taps = []; howling = true;
-      peek.innerHTML = sumiRaw('howl');
+      taps = [];
       prefs.howls = (prefs.howls || 0) + 1; savePrefs();
-      toast(prefs.howls === 1 ? 'Auuuuu! Hai scoperto l\'ululato di Sumi.' : `Auuuuu! (ululato numero ${prefs.howls})`);
-      confetti({ from: peek, n: 50 });
-      setTimeout(() => { peek.innerHTML = sumiRaw('read'); howling = false; }, 3200);
-    } else if (taps.length === 1) {
-      const lines = ['Sumi sta leggendo, non disturbarlo troppo.', 'Sumi ha la sciarpa nuova.', 'Sumi consiglia: un capitolo in più non ha mai fatto male.', 'Sumi ti guarda da sopra il libro.'];
-      toast(lines[Math.floor(Math.random() * lines.length)], { ms: 2200 });
-    }
+      toast(prefs.howls === 1 ? 'Kuro fa le fusa: l\'hai conquistato.' : `Kuro fa le fusa (volta numero ${prefs.howls})`);
+      confetti({ from: em, n: 40 });
+    } else if (taps.length === 1) toast(top[Math.floor(Math.random() * top.length)], { ms: 2000 });
   });
 
   const k = document.createElement('button');
@@ -122,15 +126,17 @@ function mountMascots() {
   document.body.append(k);
   const lines = ['Miao.', 'Prrr…', 'Kuro si è seduto sul tuo manga preferito.', 'Kuro approva i tuoi voti alti.', 'Kuro vuole i croccantini, non consigli.', 'Mrrrp?'];
   k.addEventListener('click', () => {
-    if (!reduced()) k.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-16px)' }, { transform: 'translateY(0)' }], { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+    if (!reduced()) k.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-10px)' }, { transform: 'translateY(0)' }], { duration: 560, easing: 'cubic-bezier(.22, 1, .36, 1)' });
     toast(lines[Math.floor(Math.random() * lines.length)], { ms: 1800 });
   });
   // le pupille seguono il dito / il mouse
   addEventListener('pointermove', (e) => {
-    const r = k.getBoundingClientRect(); if (!r.width) return;
-    const dx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / 300));
-    const dy = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 3)) / 300));
-    $$('.k-pupil', k).forEach((p) => { p.style.transform = `translate(${dx * 5}px, ${dy * 4}px)`; });
+    for (const box of [k, em]) {
+      const r = box.getBoundingClientRect(); if (!r.width) continue;
+      const dx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / 300));
+      const dy = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 3)) / 300));
+      $$('.k-pupil', box).forEach((p) => { p.style.transform = `translate(${dx * 2.5}px, ${dy * 2}px)`; });
+    }
   }, { passive: true });
 }
 
@@ -168,6 +174,8 @@ function bind() {
     if (b.dataset.act === 'login') { prefs.localOnly = false; savePrefs(); bus.showGate(); }
     if (b.dataset.act === 'migrate') { const n = await migrateLocalToCloud(); render(); toast(`${n} titoli spostati nel tuo account`); }
   });
+  // copertine: dissolvenza quando arrivano
+  document.addEventListener('load', (e) => { if (e.target instanceof HTMLImageElement) e.target.classList.add('ok'); }, true);
   // copertina che non si carica: al suo posto quella generata
   document.addEventListener('error', (e) => {
     const img = e.target;

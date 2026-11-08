@@ -1,27 +1,12 @@
-// Le mascotte: Sumi (il lupo a china), Kuro (il gatto nero a pennello) e il fantasmino con la candela.
-import { SUMI } from './sumi-art.js';
+// Kuro, il gatto nero (in più pose), e il fantasmino con la candela.
+import { KURO, KURO_BOOKS, KURO_SIT, KURO_SLEEP } from './art.js';
 
-// Sumi in una posa: read (legge), think (pensa), howl (ulula)
-export const sumi = (pose = 'read', cls = '') => `<div class="mascot ${cls}">${SUMI[pose] || SUMI.read}</div>`;
-export const sumiRaw = (pose = 'read') => SUMI[pose] || SUMI.read;
-
-// Kuro: gatto nero a pennellate, occhioni bianchi
-export const kuro = (cls = '') => `
-<svg class="kuro ${cls}" viewBox="0 0 140 120" aria-hidden="true">
-  <defs><filter id="brush" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="3" seed="8"/><feDisplacementMap in="SourceGraphic" scale="6"/></filter></defs>
-  <g filter="url(#brush)">
-    <path class="k-body" d="M20 120 C18 86 26 62 36 50 L30 14 L52 38 C62 34 78 34 88 38 L108 12 L106 50 C118 62 124 86 122 120 Z"/>
-    <path class="k-body" d="M14 120 C24 108 36 104 46 108 L44 120 Z M96 108 C108 104 120 108 128 120 L98 120 Z"/>
-  </g>
-  <g class="k-eyes">
-    <ellipse cx="56" cy="72" rx="14" ry="15" fill="#F1ECE6"/><ellipse cx="90" cy="72" rx="14" ry="15" fill="#F1ECE6"/>
-    <ellipse class="k-pupil" cx="59" cy="74" rx="4.5" ry="8" fill="#0B0708"/><ellipse class="k-pupil" cx="93" cy="74" rx="4.5" ry="8" fill="#0B0708"/>
-  </g>
-  <path d="M71 88 l3 3 l3 -3 z" fill="#F1ECE6" opacity=".8"/>
-  <g stroke="#F1ECE6" stroke-width="1" stroke-linecap="round" opacity=".75" fill="none">
-    <path d="M44 90 L8 84 M44 94 L10 98 M100 90 L134 82 M100 94 L132 100"/>
-  </g>
-</svg>`;
+// Kuro che si affaccia (barra in basso, impostazioni)
+export const kuro = () => KURO;
+// Kuro in posa: 'books' (sulla pila di libri, in testata), 'sit' (seduto), 'sleep' (acciambellato)
+const POSES = { books: KURO_BOOKS, sit: KURO_SIT, sleep: KURO_SLEEP };
+export const kuroPose = (pose = 'sit') => POSES[pose] || KURO_SIT;
+export const kuroBox = (pose = 'sit', cls = '') => `<div class="mascot kuro-m kuro-${pose} ${cls}">${kuroPose(pose)}</div>`;
 
 // fantasmino con la candela
 export const ghost = (cls = '') => `

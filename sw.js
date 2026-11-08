@@ -2,12 +2,12 @@
 // - i file dell'app: prima la rete (così prendi subito gli aggiornamenti), se manca usa la copia salvata
 // - le copertine: prima la copia salvata, poi la rete
 // - database e ricerche online: mai in cache
-const VERSION = 'kiroku-v2-20261108142413';
+const VERSION = 'kiroku-v2-20261108155559';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/themes.css', 'css/app.css', 'vendor/supabase.js',
   'js/main.js', 'js/util.js', 'js/types.js', 'js/state.js', 'js/store.js', 'js/cloud.js', 'js/config.js', 'js/sources.js',
   'js/cards.js', 'js/views.js', 'js/sheets.js', 'js/detail.js', 'js/form.js', 'js/recs.js', 'js/extra.js', 'js/effects.js',
-  'js/mascot.js', 'js/sumi-art.js', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
+  'js/mascot.js', 'js/art.js', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ];
 const IMG_CACHE = 'kiroku-img';
 

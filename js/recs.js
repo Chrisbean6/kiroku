@@ -1,11 +1,11 @@
 // "Per te": consigli dalla community AniList, dalla tua lista "da iniziare" e tramite Claude.
 import { $, esc, norm, nf1, LS } from './util.js';
-import { TYPES, TYPE_KEYS, normItem } from './types.js';
+import { TYPES, TYPE_KEYS, normItem, typeIcon } from './types.js';
 import { S, bus, inType } from './state.js';
 import { Store } from './store.js';
 import { anilistRecs } from './sources.js';
 import { genHTML, cardHTML } from './cards.js';
-import { sumi } from './mascot.js';
+import { kuroBox } from './mascot.js';
 import { toast } from './effects.js';
 import { sortItems } from './views.js';
 
@@ -16,7 +16,7 @@ function recCard(r, i, key) {
   const have = known(r.type, r.title);
   const cov = r.coverUrl ? `<img src="${esc(r.coverUrl)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : genHTML({ ...r, id: 'rec' + i });
   return `<article class="rec t-${r.type}" style="--i:${i}"><span class="cover ${T.square ? 'sq' : ''}">${cov}</span><div>` +
-    `<span class="type-pill"><span class="jp">${T.jp}</span>${esc(T.label)}</span>` +
+    `<span class="type-pill">${typeIcon(r.type, 'ic ti')}${esc(T.label)}</span>` +
     `<h3>${esc(r.title)}</h3><p class="by">${esc([r.author, r.year].filter(Boolean).join(', '))}</p>` +
     (r.why ? `<p class="why">${esc(r.why)}</p>` : '') +
     (have ? `<span class="added"><svg class="ic" style="width:18px;height:18px"><use href="#i-check"/></svg>Nello scaffale</span>`
@@ -27,7 +27,7 @@ function recCard(r, i, key) {
 /* ---------- 1. community AniList ---------- */
 
 async function loadCommunity() {
-  const seeds = sortItems(S.items.filter((i) => (i.type === 'manga' || i.type === 'anime') && i.src?.k === 'anilist' && (i.score >= 8 || i.fav) && inType(i)), 'score').slice(0, 10)
+  const seeds = sortItems(S.items.filter((i) => ['manga', 'anime', 'webtoon'].includes(i.type) && i.src?.k === 'anilist' && (i.score >= 8 || i.fav) && inType(i)), 'score').slice(0, 10)
     .map((i) => ({ id: i.src.id, score: i.score || 8, title: i.title }));
   const key = S.type;
   if (!seeds.length) { S.recs.al = { key, list: [], empty: true }; return; }
@@ -57,7 +57,7 @@ function fromYourList() {
 
 /* ---------- 3. Claude ---------- */
 
-const TYPE_WORDS = { manga: 'manga', anime: 'anime', vn: 'visual novel', book: 'libro', film: 'film', fanfic: 'fanfiction', game: 'videogioco', album: 'album' };
+const TYPE_WORDS = { manga: 'manga', webtoon: 'webtoon', anime: 'anime', vn: 'visual novel', book: 'libro', film: 'film', fanfic: 'fanfiction', game: 'videogioco', album: 'album' };
 function parseType(w) {
   const x = norm(w);
   if (/visual|vn/.test(x)) return 'vn';
@@ -67,7 +67,8 @@ function parseType(w) {
   if (/libro|romanzo|book|novel/.test(x)) return 'book';
   if (/film|movie/.test(x)) return 'film';
   if (/anime/.test(x)) return 'anime';
-  if (/manga|manhwa/.test(x)) return 'manga';
+  if (/webtoon|manhwa|manhua/.test(x)) return 'webtoon';
+  if (/manga/.test(x)) return 'manga';
   return null;
 }
 
@@ -75,13 +76,13 @@ export function claudePrompt(mood) {
   const line = (i) => `- ${i.title} (${TYPE_WORDS[i.type]}${i.score ? `, ${String(i.score).replace('.', ',')}/10` : ''}${i.fav ? ', preferito' : ''}${i.tags.length ? `, ${i.tags.slice(0, 3).join('/')}` : ''})`;
   const liked = sortItems(S.items.filter((i) => i.score >= 7.5 || i.fav), 'score');
   const disliked = S.items.filter((i) => i.score > 0 && i.score <= 5).slice(0, 8);
-  const want = S.type === 'all' ? 'titoli di qualsiasi tipo (manga, anime, visual novel, libri, film, fanfiction, videogiochi, album)' : TYPES[S.type].plural;
+  const want = S.type === 'all' ? 'titoli di qualsiasi tipo (manga, webtoon, anime, visual novel, libri, film, fanfiction, videogiochi, album)' : TYPES[S.type].plural;
   const build = (nLiked, nKnown) => `Ciao Claude! Uso un'app per tenere traccia di quello che leggo, guardo, gioco e ascolto. Mi consigli 8 ${want} nuovi che probabilmente mi piaceranno?\n\n` +
     (liked.length ? `Cose che ho amato:\n${liked.slice(0, nLiked).map(line).join('\n')}\n\n` : '') +
     (disliked.length ? `Cose che non mi sono piaciute:\n${disliked.map(line).join('\n')}\n\n` : '') +
     (mood ? `In questo momento ho voglia di: ${mood}\n\n` : '') +
     (nKnown ? `Li conosco già, non consigliarmeli: ${S.items.slice(0, nKnown).map((i) => i.title).join('; ')}\n\n` : '') +
-    `Rispondi con un titolo per riga, esattamente in questo formato (così li incollo nell'app):\nTitolo | tipo | autore o studio | anno | perché fa per me (una frase)\nDove "tipo" è uno tra: manga, anime, visual novel, libro, film, fanfiction, videogioco, album.`;
+    `Rispondi con un titolo per riga, esattamente in questo formato (così li incollo nell'app):\nTitolo | tipo | autore o studio | anno | perché fa per me (una frase)\nDove "tipo" è uno tra: manga, webtoon, anime, visual novel, libro, film, fanfiction, videogioco, album.`;
   let nLiked = 30, nKnown = Math.min(S.items.length, 150);
   let p = build(nLiked, nKnown);
   while (encodeURIComponent(p).length > 7000 && (nKnown > 0 || nLiked > 8)) { if (nKnown > 0) nKnown = Math.max(0, nKnown - 25); else nLiked -= 4; p = build(nLiked, nKnown); }
@@ -110,9 +111,9 @@ export function renderRecs() {
   const al = S.recs.al;
   const alOk = al && al.key === S.type;
   let alHTML;
-  if (!['all', 'manga', 'anime'].includes(S.type)) alHTML = '';
+  if (!['all', 'manga', 'anime', 'webtoon'].includes(S.type)) alHTML = '';
   else if (!alOk) alHTML = `<button class="btn small accent" data-recs="al"><svg class="ic"><use href="#i-sparkle"/></svg>Cerca consigli</button>`;
-  else if (al.busy) alHTML = `<div class="thinking">${sumi('think')}<p>Sumi sta chiedendo in giro…</p></div>`;
+  else if (al.busy) alHTML = `<div class="thinking">${kuroBox('sit', 'think')}<p>Kuro sta chiedendo in giro…</p></div>`;
   else if (al.error) alHTML = `<p class="hint" style="margin:8px 0">${esc(al.error)}</p><button class="btn small ghost" data-recs="al">Riprova</button>`;
   else if (al.empty) alHTML = `<p class="hint" style="margin:8px 0">Mi servono manga o anime che hai votato almeno 8, cercati online con "Cerca online" (così so quali sono su AniList).</p>`;
   else alHTML = al.list.length ? `<div class="recs">${al.list.map((r, i) => recCard(r, i, 'al')).join('')}</div><button class="btn small ghost" data-recs="al">Aggiorna</button>` : `<p class="hint">Niente di nuovo da proporre: hai già visto tutto!</p>`;

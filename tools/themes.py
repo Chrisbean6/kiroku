@@ -2,8 +2,8 @@
 I colori dei tipi sono stati validati (separazione per daltonismo) con lo script dataviz."""
 import json
 
-LIGHT_TYPES = {"manga":"#c65085","anime":"#4376d8","vn":"#00985f","book":"#c67100","film":"#8e5ac2","fanfic":"#0095a1","game":"#c74c41","album":"#a69300"}
-DARK_TYPES  = {"manga":"#c55e8a","anime":"#507ed3","vn":"#169f65","book":"#ca791d","film":"#9a61b8","fanfic":"#00a59e","game":"#bc5051","album":"#a39000"}
+LIGHT_TYPES = {"manga":"#c25b87","webtoon":"#7e6f00","anime":"#4384d5","vn":"#17843f","book":"#a865b7","film":"#a25900","fanfic":"#009696","game":"#6f5db9","album":"#c95d57"}
+DARK_TYPES  = {"manga":"#d16995","webtoon":"#8a7a00","anime":"#5192e4","vn":"#288f49","book":"#b672c5","film":"#b16200","fanfic":"#00a5a6","game":"#7967c5","album":"#d96a64"}
 
 def lum(h):
     h = h.lstrip('#'); r, g, b = [int(h[i:i+2], 16) / 255 for i in (0, 2, 4)]
@@ -45,7 +45,29 @@ THEMES = {
       paper='#1A0D12', paper2='#26141B', paper3='#331C25', ink='#F4E6EA', ink2='#D0B3BC', ink3='#A98A94', line='#45262F',
       accent='#D4677F', onaccent='#1A0D12', accent2='#7A2238', hl='#F0B8C4', onhl='#1A0D12', logoA='#D4677F', logoB='transparent',
       display='"Shippori Mincho B1"', blend='screen', scarf='#D4677F')),
+  'grafite': dict(label='Grafite', dark=True, t=dict(
+      paper='#111113', paper2='#19191C', paper3='#232327', ink='#EDEDF0', ink2='#B5B5BF', ink3='#8B8B97', line='#2D2D33',
+      accent='#E5484D', onaccent='#111113', accent2='#3A3A42', hl='#F2C94C', onhl='#111113', logoA='#EDEDF0', logoB='transparent',
+      display='"Bricolage Grotesque"', blend='screen', scarf='#E5484D')),
+  'ardesia-notte': dict(label='Bordeaux e ardesia notte', dark=True, t=dict(
+      paper='#171A21', paper2='#1F232C', paper3='#292E39', ink='#ECE7EA', ink2='#BBB4BD', ink3='#928B97', line='#353B48',
+      accent='#C9506A', onaccent='#FFF6F7', accent2='#7F93AF', hl='#EBB7C3', onhl='#171A21', logoA='#ECE7EA', logoB='transparent',
+      display='"Fraunces"', blend='screen', scarf='#C9506A')),
+  'lanterna': dict(label='Lanterna', dark=True, t=dict(
+      paper='#13100C', paper2='#1C1712', paper3='#271F18', ink='#F3E9DB', ink2='#CFBDA6', ink3='#A38F78', line='#382C22',
+      accent='#E9A23B', onaccent='#13100C', accent2='#5E9C95', hl='#FFD27A', onhl='#13100C', logoA='#F3E9DB', logoB='transparent',
+      display='"Fraunces"', blend='screen', scarf='#E9A23B')),
+  'velluto': dict(label='Velluto', dark=True, t=dict(
+      paper='#140F19', paper2='#1D1624', paper3='#271E30', ink='#EFE7F4', ink2='#C4B4D0', ink3='#9B89A9', line='#342840',
+      accent='#C391EE', onaccent='#140F19', accent2='#E07A9B', hl='#F5C26B', onhl='#140F19', logoA='#EFE7F4', logoB='transparent',
+      display='"Fraunces"', blend='screen', scarf='#C391EE')),
+  'oled': dict(label='Nero assoluto', dark=True, t=dict(
+      paper='#000000', paper2='#0F0F11', paper3='#1B1B1E', ink='#F2F2F2', ink2='#B3B3B8', ink3='#8D8D94', line='#27272C',
+      accent='#FF4D5E', onaccent='#000000', accent2='#7A0B14', hl='#FFD84D', onhl='#000000', logoA='#F2F2F2', logoB='transparent',
+      display='"Bricolage Grotesque"', blend='screen', scarf='#FF4D5E')),
 }
+
+UI = {'riso': ('#E0307C', None), 'riso-dark': ('#F0428F', '#5B7BF0'), 'inchiostro': ('#E0303A', '#8E0A0A'), 'notte': ('#D4677F', '#7A2238'), 'grafite': ('#E5484D', None), 'mezzanotte': ('#8C9BFF', '#3346B8'), 'ardesia-notte': ('#D96079', '#4A5A78'), 'lanterna': ('#E9A23B', '#A0601A'), 'bosco': ('#7FCB9E', '#1F6B45'), 'velluto': ('#C391EE', '#6A2FA0'), 'oled': ('#FF4D5E', None)}
 
 def block(name, th):
     t = th['t']; types = DARK_TYPES if th['dark'] else LIGHT_TYPES
@@ -54,8 +76,10 @@ def block(name, th):
       f"--ink:{t['ink']}", f"--ink-2:{t['ink2']}", f"--ink-3:{t['ink3']}", f"--line:{t['line']}", f"--chart:{t['ink2']}",
       f"--accent:{t['accent']}", f"--on-accent:{t['onaccent']}", f"--accent-2:{t['accent2']}",
       f"--hl:{t['hl']}", f"--on-hl:{t['onhl']}", f"--logo-a:{t['logoA']}", f"--logo-b:{t['logoB']}",
-      f"--f-display:{t['display']}, \"Hiragino Mincho ProN\", serif" if 'Mincho' in t['display'] or 'Yuji' in t['display'] else f"--f-display:{t['display']}, \"Hiragino Sans\", \"Arial Black\", sans-serif",
+      f"--f-display:{t['display']}, Georgia, serif" if any(x in t['display'] for x in ('Mincho', 'Yuji', 'Fraunces')) else f"--f-display:{t['display']}, \"Arial Black\", sans-serif",
       f"--blend:{t['blend']}", f"--scarf:{t['scarf']}",
+      f"--ui:{UI.get(name, (t['accent'], None))[0]}", f"--on-ui:{on(UI.get(name, (t['accent'], None))[0], '#141014', '#FFFFFF')}",
+      f"--glow:{UI.get(name, (None, None))[1] or 'transparent'}",
       f"color-scheme:{'dark' if th['dark'] else 'light'}",
     ]
     if th['dark']:

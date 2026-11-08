@@ -1,6 +1,6 @@
 // Scheda di un titolo: voto, stato, progresso, tag, link, galleria e file.
 import { $, $$, esc, nf1, fmtDate, fmtSize, todayISO, reduced, newId } from './util.js';
-import { TYPES, STATUSES, ST_ONE } from './types.js';
+import { TYPES, STATUSES, ST_ONE, typeIcon } from './types.js';
 import { S, bus, byId } from './state.js';
 import { Store, coverURL } from './store.js';
 import * as cloud from './cloud.js';
@@ -70,7 +70,7 @@ function detailHTML(it) {
     <div class="d-hero">
       <div class="${coverCls(it)} d-cover">${coverInner(it)}</div>
       <div class="d-head">
-        <span class="type-pill"><span class="jp">${T.jp}</span>${esc(T.label)}</span>
+        <span class="type-pill">${typeIcon(it.type, 'ic ti')}${esc(T.label)}</span>
         <h2 class="d-title">${esc(it.title)}</h2>
         ${it.altTitle ? `<p class="d-alt">${esc(it.altTitle)}</p>` : ''}
         ${it.author ? `<p class="d-by">${esc(it.author)}</p>` : ''}
@@ -93,7 +93,7 @@ export function openDetail(id, fromEl) {
   if (from && to && !reduced()) {
     const a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
     if (a.width && b.width) {
-      to.animate([{ transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width})`, boxShadow: 'none' }, { transform: 'none' }], { duration: 520, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      to.animate([{ transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width})`, boxShadow: 'none' }, { transform: 'none' }], { duration: 600, easing: 'cubic-bezier(.22, 1, .36, 1)' });
     }
   }
 }

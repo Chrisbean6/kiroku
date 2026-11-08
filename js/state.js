@@ -4,7 +4,7 @@ import { TYPES } from './types.js';
 
 export const PREF_KEY = 'kiroku2.prefs';
 export const prefs = Object.assign(
-  { theme: 'cipria', sort: 'recent', view: 'grid', type: 'all', bannerOff: false, localOnly: false, howls: 0 },
+  { theme: 'notte', sort: 'recent', view: 'grid', type: 'all', bannerOff: false, localOnly: false, howls: 0 },
   LS.get(PREF_KEY, {}),
 );
 export const savePrefs = () => LS.set(PREF_KEY, prefs);

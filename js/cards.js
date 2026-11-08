@@ -1,6 +1,6 @@
 // Copertine, card e righe dell'elenco.
 import { esc, hash, fmtScore, nf1 } from './util.js';
-import { TYPES, statusLabel } from './types.js';
+import { TYPES, statusLabel, typeIcon } from './types.js';
 import { S } from './state.js';
 import { coverURL } from './store.js';
 
@@ -15,7 +15,7 @@ export function genHTML(it) {
   const size = longest > 12 ? ' xl' : longest > 8 ? ' l' : '';
   const vars = `--rot:${(h % 50) - 25}deg;--dir:${120 + ((h >> 4) % 140)}deg;--c2:${c2};--ang:${(h >> 3) % 180}deg;--sx:${((h >> 11) % 45) - 15}%;--sy:${((h >> 15) % 30) + 4}%`;
   return `<span class="gen" style="${vars}"><span class="tone"></span><span class="shape sh${shape}"></span>` +
-    `<span class="gj" aria-hidden="true">${T.jp}</span><span class="gt${size}"><span>${esc(it.title || 'Senza titolo')}</span></span></span>`;
+    `${typeIcon(it.type, 'gj')}<span class="gt${size}"><span>${esc(it.title || 'Senza titolo')}</span></span></span>`;
 }
 
 export function coverInner(it) {
