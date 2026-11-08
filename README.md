@@ -18,4 +18,4 @@ AniList (anime, manga e consigli), VNDB (visual novel), Open Library (libri), iT
 
 ## Mascotte
 
-Sumi, il lupo a china (`tools/mascot.py` nel progetto di lavoro lo disegna con tratti casuali), Kuro il gatto nero e un fantasmino con la candela.
+Sumi, il lupo a china (`tools/mascot.py` lo disegna con tratti casuali), Kuro il gatto nero e un fantasmino con la candela.
