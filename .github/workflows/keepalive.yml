@@ -1,0 +1,16 @@
+# Il piano gratuito di Supabase mette in pausa i progetti inattivi da 7 giorni.
+# Questo controllo automatico "bussa" al database ogni giorno, così non succede.
+name: Tieni sveglio Supabase
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping
+        run: |
+          URL=$(grep -oP "SUPABASE_URL = '\K[^']+" <(curl -s https://raw.githubusercontent.com/${{ github.repository }}/main/js/config.js))
+          KEY=$(grep -oP "SUPABASE_KEY = '\K[^']+" <(curl -s https://raw.githubusercontent.com/${{ github.repository }}/main/js/config.js))
+          curl -s -o /dev/null -w "%{http_code}\n" "$URL/rest/v1/items?select=id&limit=1" -H "apikey: $KEY"
